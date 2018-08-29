@@ -92,37 +92,49 @@ def gradientDescent(data, rate, _lambda):
   gt = np.zeros(cols)
   np.random.shuffle(data)
   repeat = 0
-  times = 100000
+  times = 100
   losses = np.zeros(times)
-  X = data[:, 0:cols]
+  X = data[:, 0:-1]
   Y = data[:, -1]
   while repeat < times:
-    idx = repeat % row
-    item = data[idx]
-    # 求导
-    x = item[0:cols]
-    y = item[-1]
-    g = 2 * (y - x * theta) * (-x) + 2 * _lambda * theta
+    g = (Y - X @ theta) @ (-X) + _lambda * theta
+    g = g / row
     gt = gt + g**2
     theta = theta - rate * g / (gt**0.5)
     losses[repeat] = loss(X, Y, theta, _lambda)
     repeat += 1
-  
+  print(loss(X, Y, theta, _lambda))
   axiosX = np.linspace(0, repeat - 1, repeat)
   return axiosX, losses, theta
 
-def a3(data):
+def a3():
   data = np.array(pd.read_csv('./all_9_train_.csv'))
   data = data[:, 1:]
-  x1, y1, theta1 = gradientDescent(data, 0.00001, 0.1)
-  x2, y2, theta2 = gradientDescent(data, 0.00001, 0.01)
-  x3, y3, theta3 = gradientDescent(data, 0.00001, 0.001)
-  x4, y4, theta4 = gradientDescent(data, 0.00001, 0.0001)
+  cv_data = np.array(pd.read_csv('./all_9_cv_.csv'))
+  cv_data = cv_data[:, 1:]
+  CX = cv_data[:, 0:-1]
+  CY = cv_data[:, -1]
+  # x1, y1, theta1 = gradientDescent(data, 0.1, 0.1)
+  # x2, y2, theta2 = gradientDescent(data, 0.08, 0.1)
+  # x3, y3, theta3 = gradientDescent(data, 0.06, 0.1)
+  # x4, y4, theta4 = gradientDescent(data, 0.2, 0.01)
 
-  plt.plot(x1, y1, label="0.1")
-  plt.plot(x1, y2, label="0.01")
-  plt.plot(x1, y3, label="0.001")
-  plt.plot(x1, y4, label="0.0001")
+  # plt.plot(x1, y1, label="0.1")
+  # plt.plot(x1, y2, label="0.01")
+  # plt.plot(x1, y3, label="0.001")
+  # plt.plot(x4, y4, label="0.0001")
+  
+
+  rates = [0.1, 0.01, 0.001]
+  lambdas = [0.1, 0.01, 0.001, 0.0001]
+  for rate in rates:
+    for _lambda in lambdas:
+      x, y, theta = gradientDescent(data, rate, _lambda)
+      text = "rate=%s, lambda=%s" % (rate, _lambda)
+      plt.plot(x, y, label=text)
+      print(text)
+      print(loss(CX, CY, theta, _lambda))
+
   plt.xlabel('update time')
   plt.ylabel('loss')
   plt.legend()
@@ -135,13 +147,34 @@ def a1(train, cv, test):
   cv_data = cv_data[:, 1:]
   x1, y1, theta1 = gradientDescent(train_data, 0.00001, 0.1)
 
+def a4():
+  data = np.array(pd.read_csv('./all_9_train_.csv'))
+  data = data[:, 1:]
+  cv_data = np.array(pd.read_csv('./all_9_cv_.csv'))
+  cv_data = cv_data[:, 1:]
+  X = data[:, 0:-1]
+  Y = data[:, -1]
+  CX = cv_data[:, 0:-1]
+  CY = cv_data[:, -1]
+  theta = getCorrectTheta(X, Y)
+  print(loss(CX, CY, theta, 0.1))
+
+def getCorrectTheta(X, Y):
+  theta = np.linalg.inv(X.T @ X) @ X.T @ Y
+  l = loss(X, Y, theta, 0.1)
+  print(l)
+  return theta
+
 def main():
   #1 读取
-  test = getTestData('./test.csv', 9)
-  print(test.shape)
+  # test = getTestData('./test.csv', 9)
+  # print(test.shape)
   #2 生成所需数据
   #3 分成train vc 集, 7:3
   #4 开始训练
+  # a4()
+
+  a3()
 
 if __name__ == '__main__':
   main()
